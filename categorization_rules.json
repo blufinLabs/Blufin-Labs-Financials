@@ -1,0 +1,207 @@
+{
+  "contains": [
+    {
+      "match": "CLICKAWAY - SANTA",
+      "category": "Office Expenses"
+    },
+    {
+      "match": "WESTSIDE HARDWARE 02/25",
+      "category": "Mechanical Components"
+    },
+    {
+      "match": "Unicorn Technology",
+      "category": "Consulting Revenue"
+    },
+    {
+      "match": "The Scatter Works",
+      "category": "Consulting Revenue"
+    },
+    {
+      "match": "Gerson Lehrman",
+      "category": "Consulting Revenue"
+    },
+    {
+      "match": "Precitec",
+      "category": "Consulting Revenue"
+    },
+    {
+      "match": "MICROCHIP TECHNOLOGY 12/14",
+      "category": "Electronic Components"
+    },
+    {
+      "match": "RONZANO SHEET ME",
+      "category": "Machining/Fabrication"
+    },
+    {
+      "match": "MCMASTER-CARR 11/18 630-834-9600",
+      "category": "Mechanical Components"
+    },
+    {
+      "match": "MICROMECHATRONICS INC 11/12",
+      "category": "Electronic Components"
+    },
+    {
+      "match": "WWW.FLUX.AI 10/31 FLUX.AI",
+      "category": "Software"
+    },
+    {
+      "match": "PIEZODRIVE 10/21 MEREWETHER",
+      "category": "Electronic Components"
+    },
+    {
+      "match": "LAMBDA RESEARCH RP",
+      "category": "Software"
+    },
+    {
+      "match": "SANTA CRUZ ELECTRONICS",
+      "category": "Electronic Components"
+    },
+    {
+      "match": "DNH*GODADDY XXXXX20284 09/30",
+      "category": "Software"
+    },
+    {
+      "match": "GIGASOFT INC 09/29",
+      "category": "Software"
+    },
+    {
+      "match": "SUPPLIER-DIRECT 09/26 682-518-7053",
+      "category": "Electronic Components"
+    },
+    {
+      "match": "CAKE. M 09/25",
+      "category": "Software"
+    },
+    {
+      "match": "WIRE FEE",
+      "category": "Misc Expense"
+    },
+    {
+      "match": "SPIE ORG 08/26",
+      "category": "Misc Expense"
+    },
+    {
+      "match": "SQSP* SIT XXXXX5677",
+      "category": "Software"
+    },
+    {
+      "match": "CAKE. M 08/20",
+      "category": "Software"
+    },
+    {
+      "match": "DNH*GODADDY XXXXX63271 08/14",
+      "category": "Software"
+    },
+    {
+      "match": "GITHUB INC. 08/08",
+      "category": "Software"
+    },
+    {
+      "match": "BOMMER* BOMMER INC",
+      "category": "Software"
+    },
+    {
+      "match": "ODOO INC. ODOO",
+      "category": "Software"
+    },
+    {
+      "match": "SPARK FUN ELECTRONICS",
+      "category": "Electronic Components"
+    },
+    {
+      "match": "USPS. M CLICKNSHIP",
+      "category": "Misc Expense"
+    },
+    {
+      "match": "AUTODESK ADY 03/17",
+      "category": "Software"
+    },
+    {
+      "match": "GITHUB INC. 03/17",
+      "category": "Software"
+    },
+    {
+      "match": "PI SHOP INC.",
+      "category": "Electronic Components"
+    },
+    {
+      "match": "TEXAS INSTRUMENTS INC",
+      "category": "Electronic Components"
+    },
+    {
+      "match": "MCMASTER-CARR 02/24 630-834-9600",
+      "category": "Mechanical Components"
+    },
+    {
+      "match": "TO CHK NFIRMATION",
+      "category": "Labor (Consulting)"
+    },
+    {
+      "match": "MCMASTER-CARR 01/31 630-834-9600",
+      "category": "Mechanical Components"
+    },
+    {
+      "match": "DKC*DIGI KEY RP",
+      "category": "Electronic Components"
+    },
+    {
+      "match": "DESIGN N 02/17",
+      "category": "Uncategorized Expense"
+    },
+    {
+      "match": "MCMASTER-CARR 02/06 630-834-9600",
+      "category": "Machining/Fabrication"
+    },
+    {
+      "match": "CENTRAL MPUTERS INC",
+      "category": "Lab Equipment"
+    },
+    {
+      "match": "D30697903 01/15 180-072-2008",
+      "category": "Electronic Components"
+    },
+    {
+      "match": "BEGINNING BALANCE AS",
+      "category": "Uncategorized Expense"
+    },
+    {
+      "match": "DIGI-KEY",
+      "category": "Electronic Components"
+    },
+    {
+      "match": "MOUSER",
+      "category": "Electronic Components"
+    },
+    {
+      "match": "THORLABS",
+      "category": "Optical Components"
+    },
+    {
+      "match": "XOMETRY",
+      "category": "Machining/Fabrication"
+    },
+    {
+      "match": "ADVANCED CIRCUITS",
+      "category": "Machining/Fabrication"
+    },
+    {
+      "match": "OPENAI",
+      "category": "Software"
+    },
+    {
+      "match": "FIGMA",
+      "category": "Software"
+    },
+    {
+      "match": "INTUIT",
+      "category": "Software"
+    },
+    {
+      "match": "MIKE KEARNY",
+      "category": "Labor (Consulting)"
+    }
+  ],
+  "default_debit_category": "Uncategorized Expense",
+  "default_credit_category": "Uncategorized Income",
+  "cash_account": "Checking"
+}

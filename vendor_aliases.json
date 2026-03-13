@@ -1,0 +1,37 @@
+{
+  "aliases": {
+    "THORLABS": "Thorlabs",
+    "THORLABS INC": "Thorlabs",
+    "THORLABS NEWTON NJ": "Thorlabs",
+
+    "DIGI KEY": "Digi-Key",
+    "DIGI-KEY": "Digi-Key",
+    "DIGIKEY": "Digi-Key",
+    "DIGI KEY ELECTRONICS": "Digi-Key",
+
+    "MOUSER": "Mouser",
+    "MOUSER ELECTRONICS": "Mouser",
+
+    "MCMASTER": "McMaster-Carr",
+    "MCMASTER CARR": "McMaster-Carr",
+    "MCMASTER-CARR": "McMaster-Carr",
+
+    "XOMETRY": "Xometry",
+    "ADVANCED CIRCUITS": "Advanced Circuits",
+    "OPENAI": "OpenAI",
+    "FIGMA": "Figma",
+    "INTUIT": "Intuit",
+    "PRECITEC": "Precitec",
+    "CENTRAL COMPUTERS": "Central Computers",
+    "NEWEGG": "Newegg",
+    "EDMUND": "Edmund",
+    "NEWPORT": "Newport",
+    "BASLER": "Basler",
+    "TEKTRONIX": "Tektronix",
+    "KEYSIGHT": "Keysight",
+    "KEITHLEY": "Keithley",
+    "UPS": "UPS",
+    "FEDEX": "FedEx",
+    "USPS": "USPS"
+  }
+}

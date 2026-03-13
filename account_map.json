@@ -1,0 +1,173 @@
+{
+  "cash_account": "Checking",
+  "categories": {
+    "Sales": {
+      "statement_type": "income",
+      "report_name": "Sales"
+    },
+    "Consulting Revenue": {
+      "statement_type": "income",
+      "report_name": "Consulting Revenue"
+    },
+    "Misc Income": {
+      "statement_type": "income",
+      "report_name": "Misc Income"
+    },
+    "Uncategorized Income": {
+      "statement_type": "income",
+      "report_name": "Uncategorized Income"
+    },
+
+    "Electronic Components": {
+      "statement_type": "expense",
+      "report_name": "Electronic Components"
+    },
+    "Machining/Fabrication": {
+      "statement_type": "expense",
+      "report_name": "Machining/Fabrication"
+    },
+    "Lab Equipment": {
+      "statement_type": "expense",
+      "report_name": "Lab Equipment"
+    },
+    "Mechanical Components": {
+      "statement_type": "expense",
+      "report_name": "Mechanical Components"
+    },
+    "Optical Components": {
+      "statement_type": "expense",
+      "report_name": "Optical Components"
+    },
+    "Labor (Consulting)": {
+      "statement_type": "expense",
+      "report_name": "Labor (Consulting)"
+    },
+    "Bank Fees": {
+      "statement_type": "expense",
+      "report_name": "Bank Fees"
+    },
+    "Software": {
+      "statement_type": "expense",
+      "report_name": "Software"
+    },
+    "Travel Meals": {
+      "statement_type": "expense",
+      "report_name": "Travel Meals"
+    },
+    "Shipping Fees": {
+      "statement_type": "expense",
+      "report_name": "Shipping Fees"
+    },
+    "Subscriptions and Memberships": {
+      "statement_type": "expense",
+      "report_name": "Subscriptions and Memberships"
+    },
+    "Office Expenses": {
+      "statement_type": "expense",
+      "report_name": "Office Expenses"
+    },
+    "Materials and Supplies": {
+      "statement_type": "expense",
+      "report_name": "Materials and Supplies"
+    },
+    "Misc Expense": {
+      "statement_type": "expense",
+      "report_name": "Misc Expense"
+    },
+    "Uncategorized Expense": {
+      "statement_type": "expense",
+      "report_name": "Uncategorized Expense"
+    },
+
+    "Checking": {
+      "statement_type": "asset",
+      "report_name": "Checking"
+    },
+    "Savings": {
+      "statement_type": "asset",
+      "report_name": "Savings"
+    },
+    "Accounts Receivable": {
+      "statement_type": "asset",
+      "report_name": "Accounts Receivable"
+    },
+    "Inventory": {
+      "statement_type": "asset",
+      "report_name": "Inventory"
+    },
+    "Prepaid Expenses": {
+      "statement_type": "asset",
+      "report_name": "Prepaid Expenses"
+    },
+    "Fixed Assets": {
+      "statement_type": "asset",
+      "report_name": "Fixed Assets"
+    },
+    "Equipment": {
+      "statement_type": "asset",
+      "report_name": "Equipment"
+    },
+    "Optical Equipment": {
+      "statement_type": "asset",
+      "report_name": "Optical Equipment"
+    },
+    "Computer Equipment": {
+      "statement_type": "asset",
+      "report_name": "Computer Equipment"
+    },
+    "Test Equipment": {
+      "statement_type": "asset",
+      "report_name": "Test Equipment"
+    },
+    "Accumulated Depreciation": {
+      "statement_type": "asset",
+      "report_name": "Accumulated Depreciation"
+    },
+
+    "Accounts Payable": {
+      "statement_type": "liability",
+      "report_name": "Accounts Payable"
+    },
+    "Credit Card Payable": {
+      "statement_type": "liability",
+      "report_name": "Credit Card Payable"
+    },
+    "Sales Tax Payable": {
+      "statement_type": "liability",
+      "report_name": "Sales Tax Payable"
+    },
+    "Payroll Liabilities": {
+      "statement_type": "liability",
+      "report_name": "Payroll Liabilities"
+    },
+    "Loan Payable": {
+      "statement_type": "liability",
+      "report_name": "Loan Payable"
+    },
+    "Notes Payable": {
+      "statement_type": "liability",
+      "report_name": "Notes Payable"
+    },
+
+    "Owner Equity": {
+      "statement_type": "equity",
+      "report_name": "Owner Equity"
+    },
+    "Owner Contribution": {
+      "statement_type": "equity",
+      "report_name": "Owner Contribution"
+    },
+    "Owner Draw": {
+      "statement_type": "equity",
+      "report_name": "Owner Draw"
+    },
+    "Retained Earnings": {
+      "statement_type": "equity",
+      "report_name": "Retained Earnings"
+    },
+    "Balance Sheet Adjustment": {
+      "statement_type": "equity",
+      "report_name": "Balance Sheet Adjustment"
+    }
+  }
+}

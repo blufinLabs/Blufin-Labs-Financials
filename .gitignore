@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary accounting files
+new_transactions.csv
+processed_statements.json
+
+# Editor
+.vscode/
+
+# Python environments
+venv/
+.env/
+
+# Optional: large binary reports
+Finance/reports/*.xlsx

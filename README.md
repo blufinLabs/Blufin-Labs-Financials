@@ -55,6 +55,39 @@ without modifying the Raw_GL ledger.
 
 ---
 
+### 3. Generate reports for a custom date range
+
+To produce P&L, Balance Sheet, and Cash Flow for an arbitrary date range, pass `--start-date` and `--end-date`:
+
+```powershell
+python update_books.py --start-date 2025-01-01 --end-date 2025-03-31
+```
+
+or call the engine directly (no bank statement file required):
+
+```powershell
+python blufin_accounting_engine.py `
+  --xlsx-ledger Finance/reports/blufin_financial_statements.xlsx `
+  --map account_map.json `
+  --start-date 2025-01-01 `
+  --end-date 2025-03-31 `
+  --xlsx Finance/reports/blufin_financial_statements.xlsx
+```
+
+You can also combine a statement file with explicit dates. The dates take priority over the period derived from the statement header:
+
+```powershell
+python blufin_accounting_engine.py `
+  --xlsx-ledger Finance/reports/blufin_financial_statements.xlsx `
+  --map account_map.json `
+  --stmt Finance/statements/stmt_2026_03_10.csv `
+  --start-date 2026-01-01 `
+  --end-date 2026-03-10 `
+  --xlsx Finance/reports/blufin_financial_statements.xlsx
+```
+
+---
+
 # Overview
 
 The accounting engine consists of five primary scripts:
@@ -441,7 +474,28 @@ Example:
 
 ---
 
-# Dependencies
+# CLI Date Range Options
+
+All report-generating commands accept `--start-date` and `--end-date` to control the reporting period.
+
+| Script | Option | Description |
+| --- | --- | --- |
+| `blufin_accounting_engine.py` | `--start-date YYYY-MM-DD` | Report period start (overrides statement period) |
+| `blufin_accounting_engine.py` | `--end-date YYYY-MM-DD` | Report period end (overrides statement period) |
+| `run_blufin_books.py` | `--start-date YYYY-MM-DD` | Report period start |
+| `run_blufin_books.py` | `--end-date YYYY-MM-DD` | Report period end |
+| `update_books.py` | `--start-date YYYY-MM-DD` | Report period start |
+| `update_books.py` | `--end-date YYYY-MM-DD` | Report period end |
+
+When `--start-date` and `--end-date` are provided:
+
+* The `--stmt` bank statement file becomes optional.
+* P&L covers transactions from `start-date` through `end-date`.
+* Balance Sheet is shown as of `end-date`.
+* Cash Flow covers the same date range.
+* When no statement file is supplied, the beginning retained earnings are derived from the net of all income/expense transactions recorded before `start-date`, and the ending cash balance is derived from the cumulative sum of all transaction amounts through `end-date`.
+
+---
 
 Install required packages:
 

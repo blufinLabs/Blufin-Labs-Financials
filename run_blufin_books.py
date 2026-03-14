@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import csv
 import hashlib
 import json
@@ -197,18 +198,21 @@ def run_review(stmt: Path):
     )
 
 
-def run_reports(stmt: Path):
-    subprocess.run(
-        [
-            "python",
-            "blufin_accounting_engine.py",
-            "--xlsx-ledger", str(WORKBOOK),
-            "--map", str(ACCOUNT_MAP),
-            "--stmt", str(stmt),
-            "--xlsx", str(WORKBOOK),
-        ],
-        check=True,
-    )
+def run_reports(stmt: Path, start_date=None, end_date=None):
+    cmd = [
+        "python",
+        "blufin_accounting_engine.py",
+        "--xlsx-ledger", str(WORKBOOK),
+        "--map", str(ACCOUNT_MAP),
+        "--xlsx", str(WORKBOOK),
+    ]
+    if stmt is not None:
+        cmd += ["--stmt", str(stmt)]
+    if start_date:
+        cmd += ["--start-date", start_date]
+    if end_date:
+        cmd += ["--end-date", end_date]
+    subprocess.run(cmd, check=True)
 
 
 def auto_year_close():
@@ -216,24 +220,30 @@ def auto_year_close():
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Blufin Books - process bank statements and generate reports")
+    parser.add_argument("--start-date", help="Report start date YYYY-MM-DD (overrides statement period)")
+    parser.add_argument("--end-date", help="Report end date YYYY-MM-DD (overrides statement period)")
+    args = parser.parse_args()
+
     ensure_workbook_with_raw_gl()
 
     processed = load_processed()
     statements = discover_statements()
 
-    if not statements:
-        print("No statements found.")
-        return
-
     new_statements = []
-    for stmt in statements:
-        h = file_hash(stmt)
-        if not any(p["hash"] == h for p in processed):
-            new_statements.append((stmt, h))
+    if statements:
+        for stmt in statements:
+            h = file_hash(stmt)
+            if not any(p["hash"] == h for p in processed):
+                new_statements.append((stmt, h))
 
     if not new_statements:
-        print("No new statements detected.")
-        return
+        if not (args.start_date or args.end_date):
+            if not statements:
+                print("No statements found.")
+            else:
+                print("No new statements detected.")
+            return
 
     for stmt, h in new_statements:
         print("\n=====================================")
@@ -257,8 +267,11 @@ def main():
 
     auto_year_close()
 
+    # Use the most recent statement for the header when not overriding with explicit dates
+    stmt_for_report = new_statements[-1][0] if new_statements else (statements[-1] if statements else None)
+
     print("\nGenerating financial reports")
-    run_reports(new_statements[-1][0])
+    run_reports(stmt_for_report, args.start_date, args.end_date)
 
     print("\nAll statements processed.")
     print(f"Workbook updated: {WORKBOOK}")

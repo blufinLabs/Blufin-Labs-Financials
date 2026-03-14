@@ -228,15 +228,9 @@ def compute_period_pnl(df, start_date=None, end_date=None):
     }
 
 
-def compute_cashflow(df, stmt_header, asof=None):
-    work = filter_asof(df, asof)
-
-    period_start, period_end = get_statement_period(stmt_header)
-
-    current_period = work[
-        (work["date"] >= period_start) &
-        (work["date"] <= period_end)
-    ].copy()
+def compute_cashflow(df, stmt_header, period_start, period_end):
+    # df is already filtered to period_end by the caller
+    current_period = df[df["date"] >= period_start].copy()
 
     income_cash = float(current_period.loc[current_period["type"] == "income", "amount"].sum())
     expense_cash = float(current_period.loc[current_period["type"] == "expense", "amount"].sum())  # negative
@@ -245,37 +239,52 @@ def compute_cashflow(df, stmt_header, asof=None):
     investing = 0.0
     financing = 0.0
 
+    if stmt_header is not None:
+        cash_in = float(stmt_header.get("total_credits", 0.0))
+        cash_out = float(stmt_header.get("total_debits", 0.0))
+    else:
+        cash_in = float(current_period.loc[current_period["amount"] > 0, "amount"].sum())
+        cash_out = float(current_period.loc[current_period["amount"] < 0, "amount"].sum())
+
     return {
         "operating": operating,
         "investing": investing,
         "financing": financing,
         "net_cash_change": operating + investing + financing,
-        "cash_in": float(stmt_header.get("total_credits", 0.0)),
-        "cash_out": float(stmt_header.get("total_debits", 0.0)),
+        "cash_in": cash_in,
+        "cash_out": cash_out,
     }
 
 
-def compute_balance(df, stmt_header, asof=None):
-    work = filter_asof(df, asof)
-
-    period_start, period_end = get_statement_period(stmt_header)
-    pnl = compute_period_pnl(work, start_date=period_start, end_date=period_end)
+def compute_balance(df, stmt_header, period_start, period_end):
+    # df is already filtered to period_end by the caller
+    pnl = compute_period_pnl(df, start_date=period_start, end_date=period_end)
 
     current_period_earnings = float(pnl["net_income"])
-    retained_earnings = float(stmt_header.get("beginning_balance", 0.0))
-    checking_balance = float(stmt_header.get("ending_balance", 0.0))
 
-    # Pull actual balance-sheet activity from Raw_GL
-    asset_df = work[work["type"] == "asset"].copy()
-    liability_df = work[work["type"] == "liability"].copy()
-    equity_df = work[work["type"] == "equity"].copy()
+    if stmt_header is not None:
+        retained_earnings = float(stmt_header.get("beginning_balance", 0.0))
+        checking_balance = float(stmt_header.get("ending_balance", 0.0))
+    else:
+        # Derive from ledger: retained earnings = net of all income/expense before the period
+        pre_period = df[df["date"] < period_start]
+        retained_earnings = float(
+            pre_period.loc[pre_period["type"].isin(["income", "expense"]), "amount"].sum()
+        )
+        # Checking balance = cumulative sum of all transaction amounts up to period_end
+        checking_balance = float(df["amount"].sum())
+
+    # Pull actual balance-sheet activity from Raw_GL (cumulative through period_end)
+    asset_df = df[df["type"] == "asset"].copy()
+    liability_df = df[df["type"] == "liability"].copy()
+    equity_df = df[df["type"] == "equity"].copy()
 
     # IMPORTANT:
-    # Opening retained earnings is already taken from the statement header,
+    # Opening retained earnings is already computed above,
     # so exclude Retained Earnings rows from ledger equity activity to avoid double count.
     equity_df = equity_df[equity_df["report_name"] != "Retained Earnings"].copy()
 
-    # Checking comes from the bank statement, not from ledger rows
+    # Checking comes from the bank statement (or ledger sum), not from ledger asset rows
     assets_by_line = pd.Series({"Checking": checking_balance}, dtype=float)
 
     liabilities_by_line = (
@@ -293,25 +302,6 @@ def compute_balance(df, stmt_header, asof=None):
         if not equity_df.empty
         else pd.Series(dtype=float)
     )
-
-    liabilities = float(liabilities_by_line.sum()) if not liabilities_by_line.empty else 0.0
-    equity_activity = float(equity_activity_by_line.sum()) if not equity_activity_by_line.empty else 0.0
-
-    assets = checking_balance
-    total_equity = retained_earnings + current_period_earnings + equity_activity
-
-    return {
-        "assets": float(assets),
-        "liabilities": float(liabilities),
-        "equity_activity": float(equity_activity),
-        "retained_earnings": float(retained_earnings),
-        "current_year_earnings": float(current_period_earnings),
-        "total_equity": float(total_equity),
-        "balance_check": float(assets - liabilities - total_equity),
-        "assets_by_line": assets_by_line,
-        "liabilities_by_line": liabilities_by_line,
-        "equity_activity_by_line": equity_activity_by_line,
-    }
 
     liabilities = float(liabilities_by_line.sum()) if not liabilities_by_line.empty else 0.0
     equity_activity = float(equity_activity_by_line.sum()) if not equity_activity_by_line.empty else 0.0
@@ -536,17 +526,34 @@ def preserve_raw_gl_sheet(target_wb, source_wb):
         new_ws.append(list(row))
 
 
-def build_workbook(df, stmt_header, ledger_path, output_path, asof=None):
-    work = filter_asof(df, asof)
-    if work.empty:
-        raise ValueError("No transactions found for selected reporting range.")
+def build_workbook(df, stmt_header, ledger_path, output_path, asof=None, start_date=None, end_date=None):
+    # Determine reporting period from explicit CLI dates, falling back to the statement header
+    if start_date is not None and end_date is not None:
+        period_start = pd.Timestamp(start_date)
+        period_end = pd.Timestamp(end_date)
+    elif stmt_header is not None:
+        period_start, period_end = get_statement_period(stmt_header)
+    else:
+        raise ValueError(
+            "Reporting period cannot be determined. "
+            "Provide either --start-date and --end-date, or a --stmt file."
+        )
 
-    asof_date = work["date"].max()
-    period_start, period_end = get_statement_period(stmt_header)
+    if asof is not None:
+        cutoff = pd.Timestamp(asof)
+        if cutoff < period_end:
+            period_end = cutoff
+
+    # work contains all transactions up to period_end (used for charts and quarter comparison)
+    work = df[df["date"] <= period_end].copy()
+    if work.empty:
+        raise ValueError(f"No transactions found on or before {period_end.date()}.")
+
+    asof_date = period_end
 
     pnl = compute_period_pnl(work, period_start, period_end)
-    balance = compute_balance(work, stmt_header, asof_date)
-    cash = compute_cashflow(work, stmt_header, asof_date)
+    balance = compute_balance(work, stmt_header, period_start, period_end)
+    cash = compute_cashflow(work, stmt_header, period_start, period_end)
 
     pnl_df = build_pnl_dataframe(pnl, f"{period_start.date()} to {period_end.date()}")
     bs_df = build_balance_dataframe(balance, f"As of {asof_date.date()}")
@@ -574,17 +581,28 @@ def build_workbook(df, stmt_header, ledger_path, output_path, asof=None):
     ws_cf = wb.create_sheet("Cash Flow")
 
     ws_summary["A1"] = "Blufin Labs Financial Summary"
-    ws_summary["A2"] = f"As of {asof_date.date()}"
+    ws_summary["A2"] = f"Period: {period_start.date()} to {period_end.date()}"
     ws_summary["A1"].font = Font(size=14, bold=True)
 
-    summary_header_df = pd.DataFrame(
-        [
-            {"Item": stmt_header.get("beginning_balance_label", "Beginning balance"), "Amount": stmt_header.get("beginning_balance", 0.0)},
-            {"Item": "Total credits", "Amount": stmt_header.get("total_credits", 0.0)},
-            {"Item": "Total debits", "Amount": stmt_header.get("total_debits", 0.0)},
-            {"Item": stmt_header.get("ending_balance_label", "Ending balance"), "Amount": stmt_header.get("ending_balance", 0.0)},
-        ]
-    )
+    if stmt_header is not None:
+        summary_header_df = pd.DataFrame(
+            [
+                {"Item": stmt_header.get("beginning_balance_label", "Beginning balance"), "Amount": stmt_header.get("beginning_balance", 0.0)},
+                {"Item": "Total credits", "Amount": stmt_header.get("total_credits", 0.0)},
+                {"Item": "Total debits", "Amount": stmt_header.get("total_debits", 0.0)},
+                {"Item": stmt_header.get("ending_balance_label", "Ending balance"), "Amount": stmt_header.get("ending_balance", 0.0)},
+            ]
+        )
+    else:
+        period_work = work[work["date"] >= period_start]
+        summary_header_df = pd.DataFrame(
+            [
+                {"Item": f"Beginning balance ({period_start.date()})", "Amount": float(work[work["date"] < period_start]["amount"].sum())},
+                {"Item": "Total credits (period)", "Amount": float(period_work.loc[period_work["amount"] > 0, "amount"].sum())},
+                {"Item": "Total debits (period)", "Amount": float(period_work.loc[period_work["amount"] < 0, "amount"].sum())},
+                {"Item": f"Ending balance ({period_end.date()})", "Amount": float(work["amount"].sum())},
+            ]
+        )
     write_dataframe(ws_summary, summary_header_df, start_row=4, start_col=1, currency_cols=["Amount"])
 
     write_dataframe(ws_summary, customer_df, start_row=10, start_col=1, currency_cols=["Income"])
@@ -662,21 +680,30 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--xlsx-ledger", required=True, help="Workbook containing Raw_GL sheet")
     parser.add_argument("--map", required=True, help="account_map.json")
-    parser.add_argument("--stmt", required=True, help="Original bank statement CSV")
+    parser.add_argument("--stmt", required=False, help="Bank statement CSV (optional when --start-date/--end-date are provided)")
     parser.add_argument("--asof", required=False, help="Optional cutoff date YYYY-MM-DD")
+    parser.add_argument("--start-date", required=False, help="Report start date YYYY-MM-DD (overrides statement period)")
+    parser.add_argument("--end-date", required=False, help="Report end date YYYY-MM-DD (overrides statement period)")
     parser.add_argument("--xlsx", required=True, help="Output XLSX file path")
     args = parser.parse_args()
+
+    if not args.stmt and not (args.start_date and args.end_date):
+        parser.error("Either --stmt or both --start-date and --end-date must be provided.")
 
     ledger_path = Path(args.xlsx_ledger)
     output_path = Path(args.xlsx)
 
     df = load_transactions(ledger_path)
     mapping = load_account_map(args.map)
-    stmt_header = parse_statement_header(args.stmt)
+
+    stmt_header = None
+    if args.stmt:
+        stmt_header = parse_statement_header(args.stmt)
+
     df = apply_types(df, mapping)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    build_workbook(df, stmt_header, ledger_path, output_path, args.asof)
+    build_workbook(df, stmt_header, ledger_path, output_path, args.asof, args.start_date, args.end_date)
     print(f"Exported XLSX workbook: {output_path}")
 
 

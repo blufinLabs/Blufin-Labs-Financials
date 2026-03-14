@@ -497,6 +497,22 @@ When `--start-date` and `--end-date` are provided:
 
 ---
 
+# Example: Generate a Prior-Year Report
+
+You can generate financial statements for any historical period directly from the Excel ledger.
+
+Example: produce a **full-year 2025 report** using the existing Raw_GL ledger.
+
+```powershell
+python blufin_accounting_engine.py `
+  --xlsx-ledger Finance/reports/blufin_financial_statements.xlsx `
+  --map account_map.json `
+  --start-date 2025-01-01 `
+  --end-date 2025-12-31 `
+  --xlsx Finance/reports/blufin_financial_statements.xlsx
+
+---
+
 Install required packages:
 
 ```bash

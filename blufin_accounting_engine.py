@@ -256,44 +256,43 @@ def compute_cashflow(df, stmt_header, period_start, period_end):
     }
 
 
-def compute_balance(df, stmt_header, period_start, period_end):
-    # df is already filtered to period_end by the caller
-    pnl = compute_period_pnl(df, start_date=period_start, end_date=period_end)
+def compute_balance(df, start_date=None, end_date=None):
+    work = df.copy()
 
+    if start_date is not None:
+        start_date = pd.Timestamp(start_date)
+    if end_date is not None:
+        end_date = pd.Timestamp(end_date)
+
+    # Period activity used for current-period calculations
+    period_df = work.copy()
+    if start_date is not None:
+        period_df = period_df[period_df["date"] >= start_date]
+    if end_date is not None:
+        period_df = period_df[period_df["date"] <= end_date]
+
+    # Opening retained earnings comes from ledger entries BEFORE the period
+    if start_date is not None:
+        opening_df = work[work["date"] < start_date].copy()
+    else:
+        opening_df = work.iloc[0:0].copy()
+
+    opening_re_df = opening_df[
+        (opening_df["type"] == "equity") &
+        (opening_df["report_name"] == "Retained Earnings")
+    ].copy()
+
+    retained_earnings = float(opening_re_df["amount"].sum()) if not opening_re_df.empty else 0.0
+
+    # Current-period P&L
+    pnl = compute_period_pnl(period_df)
     current_period_earnings = float(pnl["net_income"])
 
-    if stmt_header is not None:
-        retained_earnings = float(stmt_header.get("beginning_balance", 0.0))
-        checking_balance = float(stmt_header.get("ending_balance", 0.0))
-    else:
-        # Derive from ledger: retained earnings = net of all income/expense before the period
-        pre_period = df[df["date"] < period_start]
-        retained_earnings = float(
-            pre_period.loc[pre_period["type"].isin(["income", "expense"]), "amount"].sum()
-        )
-        # Checking balance = cumulative sum of all transaction amounts up to period_end
-        checking_balance = float(df["amount"].sum())
-
-    # Pull actual balance-sheet activity from Raw_GL (cumulative through period_end)
-    asset_df = df[df["type"] == "asset"].copy()
-    liability_df = df[df["type"] == "liability"].copy()
-    equity_df = df[df["type"] == "equity"].copy()
-
-    # IMPORTANT:
-    # Opening retained earnings is already computed above,
-    # so exclude Retained Earnings rows from ledger equity activity to avoid double count.
-    equity_df = equity_df[equity_df["report_name"] != "Retained Earnings"].copy()
-
-    # Checking comes from the bank statement (or ledger sum), not from ledger asset rows
-    assets_by_line = pd.Series({"Checking": checking_balance}, dtype=float)
-
-    liabilities_by_line = (
-        liability_df.groupby("report_name", dropna=False)["amount"]
-        .sum()
-        .sort_index()
-        if not liability_df.empty
-        else pd.Series(dtype=float)
-    )
+    # Current-period equity activity excluding retained earnings
+    equity_df = period_df[
+        (period_df["type"] == "equity") &
+        (period_df["report_name"] != "Retained Earnings")
+    ].copy()
 
     equity_activity_by_line = (
         equity_df.groupby("report_name", dropna=False)["amount"]
@@ -302,11 +301,21 @@ def compute_balance(df, stmt_header, period_start, period_end):
         if not equity_df.empty
         else pd.Series(dtype=float)
     )
-
-    liabilities = float(liabilities_by_line.sum()) if not liabilities_by_line.empty else 0.0
     equity_activity = float(equity_activity_by_line.sum()) if not equity_activity_by_line.empty else 0.0
 
-    assets = checking_balance
+    # Asset side: use running cash position through end_date
+    if end_date is not None:
+        balance_df = work[work["date"] <= end_date].copy()
+    else:
+        balance_df = work.copy()
+
+    checking = float(balance_df["amount"].sum())
+
+    assets_by_line = pd.Series({"Checking": checking}, dtype=float)
+    liabilities_by_line = pd.Series(dtype=float)
+
+    assets = checking
+    liabilities = 0.0
     total_equity = retained_earnings + current_period_earnings + equity_activity
 
     return {
@@ -552,7 +561,9 @@ def build_workbook(df, stmt_header, ledger_path, output_path, asof=None, start_d
     asof_date = period_end
 
     pnl = compute_period_pnl(work, period_start, period_end)
-    balance = compute_balance(work, stmt_header, period_start, period_end)
+    balance_start = pd.Timestamp(start_date) if start_date is not None else period_start
+    balance_end = pd.Timestamp(end_date) if end_date is not None else period_end
+    balance = compute_balance(work, start_date=balance_start, end_date=balance_end)
     cash = compute_cashflow(work, stmt_header, period_start, period_end)
 
     pnl_df = build_pnl_dataframe(pnl, f"{period_start.date()} to {period_end.date()}")
@@ -703,7 +714,15 @@ def main():
     df = apply_types(df, mapping)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    build_workbook(df, stmt_header, ledger_path, output_path, args.asof, args.start_date, args.end_date)
+    build_workbook(
+        df,
+        stmt_header,
+        ledger_path,
+        output_path,
+        asof=args.asof,
+        start_date=args.start_date,
+        end_date=args.end_date,
+    )
     print(f"Exported XLSX workbook: {output_path}")
 
 

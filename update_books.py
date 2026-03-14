@@ -42,7 +42,9 @@ def main():
         "--map", str(ACCOUNT_MAP),
         "--xlsx", str(WORKBOOK),
     ]
-    if stmt is not None:
+    # Only pass --stmt when no explicit date range is given; the statement's
+    # ending balance only makes sense for the full statement period.
+    if stmt is not None and not (args.start_date and args.end_date):
         cmd += ["--stmt", str(stmt)]
     if args.start_date:
         cmd += ["--start-date", args.start_date]

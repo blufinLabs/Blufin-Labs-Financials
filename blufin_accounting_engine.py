@@ -267,9 +267,15 @@ def compute_balance(df, stmt_header, period_start, period_end):
         checking_balance = float(stmt_header.get("ending_balance", 0.0))
     else:
         # Derive from ledger: retained earnings = net of all income/expense before the period
+        # PLUS any Retained Earnings equity opening-balance entries before the period
         pre_period = df[df["date"] < period_start]
         retained_earnings = float(
             pre_period.loc[pre_period["type"].isin(["income", "expense"]), "amount"].sum()
+        ) + float(
+            pre_period.loc[
+                (pre_period["type"] == "equity") & (pre_period["report_name"] == "Retained Earnings"),
+                "amount",
+            ].sum()
         )
         # Checking balance = cumulative sum of all transaction amounts up to period_end
         checking_balance = float(df["amount"].sum())

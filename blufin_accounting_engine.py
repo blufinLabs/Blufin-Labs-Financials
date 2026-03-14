@@ -256,23 +256,22 @@ def compute_cashflow(df, stmt_header, period_start, period_end):
     }
 
 
-def compute_balance(df, stmt_header, period_start, period_end):
-    # df is already filtered to period_end by the caller
+def compute_balance(df, start_date=None, end_date=None):
+    # df is already filtered to end_date by the caller
+    period_start = pd.Timestamp(start_date) if start_date is not None else df["date"].min()
+    period_end = pd.Timestamp(end_date) if end_date is not None else df["date"].max()
+
     pnl = compute_period_pnl(df, start_date=period_start, end_date=period_end)
 
     current_period_earnings = float(pnl["net_income"])
 
-    if stmt_header is not None:
-        retained_earnings = float(stmt_header.get("beginning_balance", 0.0))
-        checking_balance = float(stmt_header.get("ending_balance", 0.0))
-    else:
-        # Derive from ledger: retained earnings = net of all income/expense before the period
-        pre_period = df[df["date"] < period_start]
-        retained_earnings = float(
-            pre_period.loc[pre_period["type"].isin(["income", "expense"]), "amount"].sum()
-        )
-        # Checking balance = cumulative sum of all transaction amounts up to period_end
-        checking_balance = float(df["amount"].sum())
+    # Derive from ledger: retained earnings = net of all income/expense before the period
+    pre_period = df[df["date"] < period_start]
+    retained_earnings = float(
+        pre_period.loc[pre_period["type"].isin(["income", "expense"]), "amount"].sum()
+    )
+    # Checking balance = cumulative sum of all transaction amounts up to period_end
+    checking_balance = float(df["amount"].sum())
 
     # Pull actual balance-sheet activity from Raw_GL (cumulative through period_end)
     asset_df = df[df["type"] == "asset"].copy()
@@ -552,7 +551,7 @@ def build_workbook(df, stmt_header, ledger_path, output_path, asof=None, start_d
     asof_date = period_end
 
     pnl = compute_period_pnl(work, period_start, period_end)
-    balance = compute_balance(work, stmt_header, period_start, period_end)
+    balance = compute_balance(work, start_date=start_date, end_date=end_date)
     cash = compute_cashflow(work, stmt_header, period_start, period_end)
 
     pnl_df = build_pnl_dataframe(pnl, f"{period_start.date()} to {period_end.date()}")
